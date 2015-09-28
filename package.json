@@ -4,7 +4,7 @@
   "description": "Improved event handling and testing for the HTML5 canvas",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha-phantomjs test/runner.html"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   "homepage": "https://github.com/hammerlab/data-canvas#readme",
   "devDependencies": {
     "chai": "^3.3.0",
-    "mocha": "^2.3.3"
+    "mocha": "^2.3.3",
+    "mocha-phantomjs": "3.5.3"
   }
 }
