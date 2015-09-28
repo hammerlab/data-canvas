@@ -33,7 +33,7 @@ canvas's speed and simplicity.
 A canvas example
 ----------------
 
-For example, here's a bit of data representing a car:
+Here's a bit of data representing a car:
 
 ```javascript
 var car = {
@@ -72,17 +72,18 @@ function renderBoxyCar() {
 ```
 
 ![Boxy red car with two black wheels](https://cloud.githubusercontent.com/assets/98301/10149592/afbfddc6-6608-11e5-9ce8-ee5ef9bb0b7c.png)
+
 _(see [full demo][4])_
 
 This is a beautiful car and a faithful rendering of the data. But what if you
 wanted to add a click handler to it? What if you wanted to write a test which
 asserted that there were two wheels?
 
-data-canvas can help with both of these.
+data-canvas can help you do both of these.
 
 The data stack
 --------------
-[_All problems in computer science can be solved by another level of indirection._][3]
+[_"All problems in computer science can be solved by another level of indirection."_][3]
 
 data-canvas wraps the browser's canvas rendering context with a `DataContext`,
 which adds two new primitives:
