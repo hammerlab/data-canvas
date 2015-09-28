@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/hammerlab/data-canvas.svg?branch=travis-tests)](https://travis-ci.org/hammerlab/data-canvas)
 data-canvas
 ===========
 
