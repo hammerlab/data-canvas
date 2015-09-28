@@ -148,8 +148,8 @@ describe('data-canvas', function() {
       dtx.popObject();
 
       expect(dtx.calls).to.have.length(3); // push, fill, pop
-      expect(dtx.drawnObjectsWith(x => x == 'a')).to.have.length(1);
-      expect(dtx.drawnObjectsWith(x => x == 'b')).to.have.length(0);
+      expect(dtx.drawnObjectsWith(function(x) { return x == 'a' })).to.have.length(1);
+      expect(dtx.drawnObjectsWith(function(x) { return x == 'b' })).to.have.length(0);
 
       // TODO: check drawing styles
     });
@@ -171,7 +171,7 @@ describe('data-canvas', function() {
       dtx.popObject();
 
       expect(RecordingContext.drawnObjects()).to.deep.equal(['hello']);
-      expect(RecordingContext.drawnObjectsWith(x => x == 'hello')).to.deep.equal(['hello']);
+      expect(RecordingContext.drawnObjectsWith(function(x) { return x == 'hello' })).to.deep.equal(['hello']);
       expect(RecordingContext.callsOf('fillText')).to.deep.equal(
           [['fillText', 'hello', 100, 10]]);
 

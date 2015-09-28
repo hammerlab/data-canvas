@@ -75,7 +75,7 @@ function RecordingContext(ctx) {
   this.calls = calls;
 
   for (var k in ctx) {
-    (k => {
+    (function(k) {
       if (typeof(ctx[k]) != 'function') return;
       this[k] = function() {
         // TODO: record current drawing style
@@ -83,7 +83,7 @@ function RecordingContext(ctx) {
         calls.push([k].concat(args));
         return ctx[k].apply(ctx, arguments);
       };
-    })(k);
+    }).bind(this)(k);
   }
 
   this.pushObject = function(o) {
@@ -104,7 +104,9 @@ function RecordingContext(ctx) {
  * the particular predicate.
  */
 RecordingContext.prototype.drawnObjectsWith = function(predicate) {
-  return this.callsOf('pushObject').filter(x => predicate(x[1])).map(x => x[1]);
+  return this.callsOf('pushObject')
+             .filter(function(x) { return predicate(x[1]) })
+             .map(function(x) { return x[1]; });
 };
 
 /**
@@ -114,7 +116,7 @@ RecordingContext.prototype.drawnObjectsWith = function(predicate) {
  * [ ['fillText', 'Hello!', 20, 10] ]
  */
 RecordingContext.prototype.callsOf = function(type) {
-  return this.calls.filter(call => call[0] == type);
+  return this.calls.filter(function(call) { return call[0] == type });
 };
 
 /**
