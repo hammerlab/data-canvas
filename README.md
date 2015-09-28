@@ -1,3 +1,14 @@
+data-canvas
+===========
+
+data-canvas allows you to add event tracking and tests to existing [canvas][1]
+code without sacrificing performance and without forcing you to refactor.
+
+It does this by introducing a new abstraction to canvas: the data stack. 
+
+Background
+----------
+
 The [HTML5 canvas][1] has several advantages over [SVG][], its main rival for
 graphics on the web:
 
