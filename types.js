@@ -25,5 +25,6 @@ declare class RecordingContext extends DataCanvasRenderingContext2D {
 
 declare class ClickTrackingContext extends DataCanvasRenderingContext2D {
   constructor(ctx: CanvasRenderingContext2D, x: number, y: number): void;
+  hit: ?any[];
   hits: any[][];
 }
