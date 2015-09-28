@@ -139,12 +139,13 @@ describe('boxy car', function() {
     var RecordingContext = dataCanvas.RecordingContext;
     RecordingContext.recordAll();  // stub in a recording data context
     renderBoxyCar();
-    RecordingContext.reset();  // restore the usual data context
 
     var wheels = RecordingContext.drawnObjectsWith(x => x.radius);
     expect(wheels).to.have.length(2);
     expect(wheels[0].name).to.equal('back wheel');
     expect(wheels[1].name).to.equal('front wheel');
+
+    RecordingContext.reset();  // restore the usual data context
   });
 });
 ```

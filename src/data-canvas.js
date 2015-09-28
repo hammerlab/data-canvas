@@ -171,15 +171,46 @@ RecordingContext.recorderForSelector = function(div, selector) {
   return RecordingContext.recorderForCanvas(canvas);
 };
 
+// Resolves arguments for RecordingContext helpers.
+// You can either specify a div & selector to find the canvas, or omit this if
+// there's only one canvas being recorded.
+function findRecorder(div, selector) {
+  if (!div) {
+    if (RecordingContext.recorders == 0) {
+      throw 'Called a RecordingContext method, but no canvases are being recorded.';
+    } else if (RecordingContext.recorders > 1) {
+      throw 'Called a RecordingContext method while multiple canvases were being recorded. Specify one using a div and selector.';
+    } else {
+      return RecordingContext.recorders[0][1];
+    }
+  } else {
+    return RecordingContext.recorderForSelector(div, selector);
+  }
+}
+
 // Find objects pushed onto a particular recorded canvas.
 RecordingContext.drawnObjectsWith = function(div, selector, predicate) {
-  var recorder = RecordingContext.recorderForSelector(div, selector);
+  // Check for the one-argument version.
+  if (typeof(div) == 'function') {
+    predicate = div;
+    div = null;
+  }
+  var recorder = findRecorder(div, selector);
+  predicate = predicate || function() { return true; };
   return recorder ? recorder.drawnObjectsWith(predicate) : [];
-}
+};
+
+// This version reads better if there's no predicate.
+RecordingContext.drawnObjects = RecordingContext.drawnObjectsWith;
 
 // Find calls of particular drawing functions (e.g. fillText)
 RecordingContext.callsOf = function (div, selector, type) {
-  var recorder = RecordingContext.recorderForSelector(div, selector);
+  // Check for the one-argument version.
+  if (typeof(div) == 'string') {
+    type = div;
+    div = null;
+  }
+  var recorder = findRecorder(div, selector);
   return recorder ? recorder.callsOf(type) : [];
 };
 

@@ -161,6 +161,22 @@ describe('data-canvas', function() {
       expect(dtx.calls).to.deep.equal([['measureText', 'Hello']]);
       expect(metrics.width).to.be.greaterThan(0);
     });
+
+    it('should provid static testing methods', function() {
+      var RecordingContext = dataCanvas.RecordingContext;
+      RecordingContext.recordAll();
+      var dtx = dataCanvas.getDataContext(ctx);
+      dtx.pushObject('hello');
+      dtx.fillText('hello', 100, 10);
+      dtx.popObject();
+
+      expect(RecordingContext.drawnObjects()).to.deep.equal(['hello']);
+      expect(RecordingContext.drawnObjectsWith(x => x == 'hello')).to.deep.equal(['hello']);
+      expect(RecordingContext.callsOf('fillText')).to.deep.equal(
+          [['fillText', 'hello', 100, 10]]);
+
+      RecordingContext.reset();
+    });
   });
 });
 

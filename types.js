@@ -19,8 +19,15 @@ declare class RecordingContext extends DataCanvasRenderingContext2D {
 
   static recordAll(): void;
   static reset(): void;
+
   static drawnObjectsWith(div: HTMLElement, selector: string, predicate:(o: Object)=>boolean): Object[];
+  static drawnObjectsWith(predicate:(o: Object)=>boolean): Object[];
+
+  static drawnObjects(div: HTMLElement, selector: string): Object[];
+  static drawnObjects(): Object[];
+
   static callsOf(div: HTMLElement, selector: string, type: string): Array<any>[];
+  static callsOf(type: string): Array<any>[];
 }
 
 declare class ClickTrackingContext extends DataCanvasRenderingContext2D {
