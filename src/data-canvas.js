@@ -45,8 +45,16 @@ var stubGetDataContext = null;
  * Get a DataContext for the built-in CanvasRenderingContext2D.
  *
  * This caches DataContexts and facilitates stubbing in tests.
+ *
+ * As a convenience, you may pass in a Canvas element instead of a
+ * CanvasRenderingContext2D. data-canvas will call getContext('2d') for you.
  */
-function getDataContext(ctx) {
+function getDataContext(ctxOrCanvas) {
+  if (ctxOrCanvas instanceof HTMLCanvasElement) {
+    return getDataContext(ctxOrCanvas.getContext('2d'));
+  }
+
+  var ctx = ctxOrCanvas;
   if (stubGetDataContext) {
     return stubGetDataContext(ctx);
   } else {
@@ -142,6 +150,9 @@ RecordingContext.recordAll = function() {
  * Revert the stubbing performed by RecordingContext.recordAll.
  */
 RecordingContext.reset = function() {
+  if (!stubGetDataContext) {
+    throw 'Called RecordingContext.reset() before RecordingContext.recordAll()';
+  }
   stubGetDataContext = null;
   RecordingContext.recorders = null;
 };
@@ -168,8 +179,12 @@ RecordingContext.recorderForSelector = function(div, selector) {
   if (RecordingContext.recorders == null) {
     throw 'You can only call recorderForSelector after RecordingContext.recordAll()';
   }
-  var canvas = div.querySelector(selector + ' canvas');
-  if (!canvas) return null;
+  var canvas = div.querySelector(selector + ' canvas') || div.querySelector(selector);
+  if (!canvas) {
+    throw 'Unable to find a canvas matching ' + selector;
+  } else if (!(canvas instanceof HTMLCanvasElement)) {
+    throw 'Selector ' + selector + ' neither matches nor contains a canvas';
+  }
   return RecordingContext.recorderForCanvas(canvas);
 };
 
@@ -178,9 +193,9 @@ RecordingContext.recorderForSelector = function(div, selector) {
 // there's only one canvas being recorded.
 function findRecorder(div, selector) {
   if (!div) {
-    if (RecordingContext.recorders == 0) {
+    if (RecordingContext.recorders.length == 0) {
       throw 'Called a RecordingContext method, but no canvases are being recorded.';
-    } else if (RecordingContext.recorders > 1) {
+    } else if (RecordingContext.recorders.length > 1) {
       throw 'Called a RecordingContext method while multiple canvases were being recorded. Specify one using a div and selector.';
     } else {
       return RecordingContext.recorders[0][1];
@@ -192,8 +207,8 @@ function findRecorder(div, selector) {
 
 // Find objects pushed onto a particular recorded canvas.
 RecordingContext.drawnObjectsWith = function(div, selector, predicate) {
-  // Check for the one-argument version.
-  if (typeof(div) == 'function') {
+  // Check for the zero-argument or one-argument version.
+  if (typeof(div) == 'function' || arguments.length == 0) {
     predicate = div;
     div = null;
   }
