@@ -21,7 +21,11 @@
   "homepage": "https://github.com/hammerlab/data-canvas#readme",
   "devDependencies": {
     "chai": "^3.3.0",
+    "coveralls": "^2.11.4",
+    "istanbul": "^0.3.21",
     "mocha": "^2.3.3",
-    "mocha-phantomjs": "3.5.3"
+    "mocha-phantomjs": "3.5.3",
+    "mocha-phantomjs-istanbul": "0.0.2",
+    "phantomjs": "^1.9.18"
   }
 }
