@@ -12,7 +12,7 @@ describe('data-canvas', function() {
     canvas = document.createElement('canvas');
     canvas.width = 600;
     canvas.height = 200;
-    document.getElementById('testdiv').appendChild(canvas);
+    testDiv.appendChild(canvas);
   });
 
   after(function() {
@@ -148,60 +148,109 @@ describe('data-canvas', function() {
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     });
 
-    it('should record calls', function() {
-      var dtx = new RecordingContext(ctx);
-      dtx.fillStyle = 'red';
-      dtx.pushObject('a');
-      dtx.fillRect(100, 50, 200, 25);
-      dtx.popObject();
+    describe('single canvas', function() {
+      it('should record calls', function() {
+        var dtx = new RecordingContext(ctx);
+        dtx.fillStyle = 'red';
+        dtx.pushObject('a');
+        dtx.fillRect(100, 50, 200, 25);
+        dtx.popObject();
 
-      expect(dtx.calls).to.have.length(3); // push, fill, pop
-      expect(dtx.drawnObjectsWith(function(x) { return x == 'a' })).to.have.length(1);
-      expect(dtx.drawnObjectsWith(function(x) { return x == 'b' })).to.have.length(0);
+        expect(dtx.calls).to.have.length(3); // push, fill, pop
+        expect(dtx.drawnObjectsWith(function(x) { return x == 'a' })).to.have.length(1);
+        expect(dtx.drawnObjectsWith(function(x) { return x == 'b' })).to.have.length(0);
 
-      // TODO: check drawing styles
-    });
+        // TODO: check drawing styles
+      });
 
-    it('should return values from proxied functions', function() {
-      var dtx = new RecordingContext(ctx);
-      var metrics = dtx.measureText('Hello');
+      it('should return values from proxied functions', function() {
+        var dtx = new RecordingContext(ctx);
+        var metrics = dtx.measureText('Hello');
 
-      expect(dtx.calls).to.deep.equal([['measureText', 'Hello']]);
-      expect(metrics.width).to.be.greaterThan(0);
-    });
+        expect(dtx.calls).to.deep.equal([['measureText', 'Hello']]);
+        expect(metrics.width).to.be.greaterThan(0);
+      });
 
-    it('should provid static testing methods', function() {
-      RecordingContext.recordAll();
-      var dtx = dataCanvas.getDataContext(ctx);
-      dtx.pushObject('hello');
-      dtx.fillText('hello', 100, 10);
-      dtx.popObject();
-
-      expect(RecordingContext.drawnObjects()).to.deep.equal(['hello']);
-      expect(RecordingContext.drawnObjectsWith(function(x) { return x == 'hello' })).to.deep.equal(['hello']);
-      expect(RecordingContext.callsOf('fillText')).to.deep.equal(
-          [['fillText', 'hello', 100, 10]]);
-
-      RecordingContext.reset();
-    });
-
-    it('should reset the list of calls', function() {
-      function render(dtx) {
-        dtx.reset();  // this clears the list of calls
+      it('should provid static testing methods', function() {
+        RecordingContext.recordAll();
+        var dtx = dataCanvas.getDataContext(ctx);
         dtx.pushObject('hello');
         dtx.fillText('hello', 100, 10);
         dtx.popObject();
-      }
 
-      RecordingContext.recordAll();
-      var dtx = dataCanvas.getDataContext(ctx);
-      render(dtx);
-      render(dtx);
+        expect(RecordingContext.drawnObjects()).to.deep.equal(['hello']);
+        expect(RecordingContext.drawnObjectsWith(function(x) { return x == 'hello' })).to.deep.equal(['hello']);
+        expect(RecordingContext.callsOf('fillText')).to.deep.equal(
+            [['fillText', 'hello', 100, 10]]);
 
-      // Only one object, not two (even though there are two render calls).
-      expect(RecordingContext.drawnObjects()).to.have.length(1);
+        RecordingContext.reset();
+      });
 
-      RecordingContext.reset();
+      it('should reset the list of calls', function() {
+        function render(dtx) {
+          dtx.reset();  // this clears the list of calls
+          dtx.pushObject('hello');
+          dtx.fillText('hello', 100, 10);
+          dtx.popObject();
+        }
+
+        RecordingContext.recordAll();
+        var dtx = dataCanvas.getDataContext(ctx);
+        render(dtx);
+        render(dtx);
+
+        // Only one object, not two (even though there are two render calls).
+        expect(RecordingContext.drawnObjects()).to.have.length(1);
+
+        RecordingContext.reset();
+      });
+    });
+
+    describe('multiple canvases', function() {
+      var canvas2;
+      before(function() {
+        canvas2 = document.createElement('canvas');
+        canvas2.width = 400;
+        canvas2.height = 100;
+        canvas2.setAttribute('class', 'canvas2');
+        canvas.setAttribute('class', 'canvas1');
+        testDiv.appendChild(canvas2);
+      });
+
+      it('should record calls to both canvases', function() {
+        function render(dtx, text) {
+          dtx.pushObject(text);
+          dtx.fillText(text, 100, 10);
+          dtx.popObject();
+        }
+
+        RecordingContext.recordAll();
+
+        var dtx1 = dataCanvas.getDataContext(canvas),
+            dtx2 = dataCanvas.getDataContext(canvas2);
+        render(dtx1, 'Hello #1');
+        render(dtx2, 'Hello #2');
+
+        expect(function() {
+          RecordingContext.drawnObjects();
+        }).to.throw(/multiple canvases/);
+
+        expect(RecordingContext.drawnObjects(testdiv, '.canvas1'))
+            .to.deep.equal(['Hello #1']);
+        expect(RecordingContext.drawnObjects(testdiv, '.canvas2'))
+            .to.deep.equal(['Hello #2']);
+
+        expect(RecordingContext.callsOf(testdiv, '.canvas1', 'fillText'))
+            .to.deep.equal([['fillText', 'Hello #1', 100, 10]]);
+        expect(RecordingContext.callsOf(testdiv, '.canvas2', 'fillText'))
+            .to.deep.equal([['fillText', 'Hello #2', 100, 10]]);
+
+        expect(function() {
+          RecordingContext.drawnObjects(testdiv, '.canvas3');
+        }).to.throw(/Unable to find.*\.canvas3/);
+
+        RecordingContext.reset();
+      });
     });
 
     describe('error cases', function() {
