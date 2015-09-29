@@ -45,8 +45,16 @@ var stubGetDataContext = null;
  * Get a DataContext for the built-in CanvasRenderingContext2D.
  *
  * This caches DataContexts and facilitates stubbing in tests.
+ *
+ * As a convenience, you may pass in a Canvas element instead of a
+ * CanvasRenderingContext2D. data-canvas will call getContext('2d') for you.
  */
-function getDataContext(ctx) {
+function getDataContext(ctxOrCanvas) {
+  if (ctxOrCanvas instanceof HTMLCanvasElement) {
+    return getDataContext(ctxOrCanvas.getContext('2d'));
+  }
+
+  var ctx = ctxOrCanvas;
   if (stubGetDataContext) {
     return stubGetDataContext(ctx);
   } else {
@@ -142,6 +150,9 @@ RecordingContext.recordAll = function() {
  * Revert the stubbing performed by RecordingContext.recordAll.
  */
 RecordingContext.reset = function() {
+  if (!stubGetDataContext) {
+    throw 'Called RecordingContext.reset() before RecordingContext.recordAll()';
+  }
   stubGetDataContext = null;
   RecordingContext.recorders = null;
 };

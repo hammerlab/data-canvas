@@ -47,10 +47,16 @@ describe('data-canvas', function() {
     it('should cache calls', function() {
       if (!canvas) throw 'bad';  // for flow
       var ctx = canvas.getContext('2d');
-      var dtx = dataCanvas.getDataContext(ctx);
+      var dtx = dataCanvas.getDataContext(canvas);
       var dtx2 = dataCanvas.getDataContext(ctx);
 
       expect(dtx2).to.equal(dtx2);
+    });
+
+    it('should support read/write to properties', function() {
+      var dtx = dataCanvas.getDataContext(canvas);
+      dtx.lineWidth = 10;
+      expect(dtx.lineWidth).to.equal(10);
     });
   });
 
@@ -133,6 +139,8 @@ describe('data-canvas', function() {
   });
 
   describe('RecordingContext', function() {
+    var RecordingContext = dataCanvas.RecordingContext;
+
     var ctx;
     before(function() {
       if (!canvas) throw 'bad';  // for flow
@@ -141,7 +149,7 @@ describe('data-canvas', function() {
     });
 
     it('should record calls', function() {
-      var dtx = new dataCanvas.RecordingContext(ctx);
+      var dtx = new RecordingContext(ctx);
       dtx.fillStyle = 'red';
       dtx.pushObject('a');
       dtx.fillRect(100, 50, 200, 25);
@@ -155,7 +163,7 @@ describe('data-canvas', function() {
     });
 
     it('should return values from proxied functions', function() {
-      var dtx = new dataCanvas.RecordingContext(ctx);
+      var dtx = new RecordingContext(ctx);
       var metrics = dtx.measureText('Hello');
 
       expect(dtx.calls).to.deep.equal([['measureText', 'Hello']]);
@@ -163,7 +171,6 @@ describe('data-canvas', function() {
     });
 
     it('should provid static testing methods', function() {
-      var RecordingContext = dataCanvas.RecordingContext;
       RecordingContext.recordAll();
       var dtx = dataCanvas.getDataContext(ctx);
       dtx.pushObject('hello');
@@ -176,6 +183,46 @@ describe('data-canvas', function() {
           [['fillText', 'hello', 100, 10]]);
 
       RecordingContext.reset();
+    });
+
+    it('should reset the list of calls', function() {
+      function render(dtx) {
+        dtx.reset();  // this clears the list of calls
+        dtx.pushObject('hello');
+        dtx.fillText('hello', 100, 10);
+        dtx.popObject();
+      }
+
+      RecordingContext.recordAll();
+      var dtx = dataCanvas.getDataContext(ctx);
+      render(dtx);
+      render(dtx);
+
+      // Only one object, not two (even though there are two render calls).
+      expect(RecordingContext.drawnObjects()).to.have.length(1);
+
+      RecordingContext.reset();
+    });
+
+    describe('error cases', function() {
+      it('should throw on reset before record', function() {
+        expect(function() {
+          RecordingContext.reset();
+        }).to.throw(/reset.*before.*recordAll/);
+      });
+
+      it('should throw on double record', function() {
+        expect(function() {
+          RecordingContext.recordAll();
+          RecordingContext.recordAll();
+        }).to.throw(/forgot.*reset/);
+      });
+
+      it('should throw on access without recording', function() {
+        expect(function() {
+          RecordingContext.drawnObjects();
+        }).to.throw(/no canvases.*recorded/);
+      });
     });
   });
 });
