@@ -174,11 +174,6 @@ describe('data-canvas', function() {
           dtx.restore();
         }
 
-        console.log('isPointInStroke:');
-        console.log(ctx.isPointInPath.toString());
-        console.log(ctx.isPointInStroke.toString());
-        console.log('---:');
-
         draw(dataCanvas.getDataContext(ctx));
         // a click on the stroke is a hit...
         expect(getObjectsAt(draw, 100, 10)).to.deep.equal([['shape']]);
