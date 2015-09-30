@@ -242,6 +242,17 @@ or require it:
 
     var dataCanvas = require('data-canvas');
 
+data-canvas comes with type bindings for [Flow][]. To use these, add the
+following to your `.flowconfig`:
+
+```
+[ignore]
+.*node_modules/data-canvas.*
+
+[lib]
+node_modules/data-canvas/flowtype
+```
+
 
 [1]: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
 [svg]: https://developer.mozilla.org/en-US/docs/Web/SVG
@@ -249,3 +260,4 @@ or require it:
 [3]: http://www.dmst.aueb.gr/dds/pubs/inbook/beautiful_code/html/Spi07g.html
 [4]: http://jsfiddle.net/7nkbfbkb/1/
 [5]: http://jsfiddle.net/7nkbfbkb/3/
+[flow]: http://flowtype.org
