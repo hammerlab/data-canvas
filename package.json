@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Improved event handling and testing for the HTML5 canvas",
   "main": "index.js",
+  "browserify": "src/data-canvas.js",
   "scripts": {
     "test": "mocha-phantomjs test/runner.html"
   },
