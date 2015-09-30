@@ -16,7 +16,7 @@ describe('data-canvas', function() {
   });
 
   after(function() {
-    testDiv.innerHTML = '';  // avoid pollution between tests.
+    // testDiv.innerHTML = '';  // avoid pollution between tests.
   });
 
   function rgbAtPos(im, x, y) {
@@ -28,7 +28,7 @@ describe('data-canvas', function() {
     ];
   }
 
-  describe('pass-through canvas', function() {
+  describe('DataContext', function() {
     it('should put pixels on the canvas', function() {
       if (!canvas) throw 'bad';  // for flow
       var ctx = canvas.getContext('2d');
@@ -60,7 +60,7 @@ describe('data-canvas', function() {
     });
   });
 
-  describe('click tracking context', function() {
+  describe('ClickTrackingContext', function() {
     var ctx;
     before(function() {
       if (!canvas) throw 'bad';  // for flow
@@ -135,7 +135,58 @@ describe('data-canvas', function() {
       expect(getObjectsAt(draw, 475, 100)).to.deep.equal([['side'], ['bottom']]);
     });
 
-    // TODO: tests with drawText()
+    it('should reset hit tracker', function() {
+      function draw(dtx) {
+        dtx.reset();
+        dtx.clearRect(0, 0, dtx.canvas.width, dtx.canvas.height);
+        dtx.pushObject('rect');
+        dtx.fillRect(100, 10, 200, 30);
+        dtx.popObject();
+      }
+      function doubledraw(dtx) {
+        draw(dtx);
+        draw(dtx);
+      }
+
+      // Despite the double-drawing, only one object matches, not two.
+      // This is because of the reset() call.
+      doubledraw(dataCanvas.getDataContext(ctx));
+      expect(getObjectsAt(doubledraw, 110, 30)).to.deep.equal([['rect']]);
+    });
+
+    // PhantomJS 1.9.x does not support isStrokeInPath
+    // When Travis-CI updates to Phantom2, this can be re-enabled.
+    // See https://github.com/ariya/phantomjs/issues/12948
+    if (!navigator.userAgent.match(/PhantomJS\/1.9/)) {
+      it('should detect clicks in strokes', function() {
+        function draw(dtx) {
+          dtx.save();
+          dtx.pushObject('shape');
+          dtx.lineWidth = 5;
+          dtx.beginPath();
+          dtx.moveTo(100, 10);
+          dtx.lineTo(200, 10);
+          dtx.lineTo(200, 30);
+          dtx.lineTo(100, 30);
+          dtx.closePath();
+          dtx.stroke();
+          dtx.popObject();
+          dtx.restore();
+        }
+
+        console.log('isPointInStroke:');
+        console.log(ctx.isPointInPath.toString());
+        console.log(ctx.isPointInStroke.toString());
+        console.log('---:');
+
+        draw(dataCanvas.getDataContext(ctx));
+        // a click on the stroke is a hit...
+        expect(getObjectsAt(draw, 100, 10)).to.deep.equal([['shape']]);
+        // ... while a click in the interior is not.
+        expect(getObjectsAt(draw, 150, 20)).to.deep.equal([]);
+      });
+    }
+
   });
 
   describe('RecordingContext', function() {
@@ -250,6 +301,22 @@ describe('data-canvas', function() {
         }).to.throw(/Unable to find.*\.canvas3/);
 
         RecordingContext.reset();
+      });
+
+      it('should throw on matching non-canvas', function() {
+        testDiv.innerHTML += '<div class=foo>Foo</div>';
+        RecordingContext.recordAll();
+        expect(function() {
+          RecordingContext.drawnObjects(testdiv, '.foo');
+        }).to.throw(/.foo neither matches nor contains/);
+        RecordingContext.reset();
+      });
+
+      it('should throw before recording', function() {
+        // TODO: this error message doesn't make much sense for a user.
+        expect(function() {
+          RecordingContext.drawnObjects(testdiv, '.canvas1');
+        }).to.throw(/must call .*recordAll.*other.*static methods/);
       });
     });
 
