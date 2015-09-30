@@ -161,7 +161,7 @@ RecordingContext.reset = function() {
 RecordingContext.recorderForCanvas = function(canvas) {
   var recorders = RecordingContext.recorders;
   if (recorders == null) {
-    throw 'You can only call recorderForCanvas after RecordingContext.recordAll()';
+    throw 'You must call RecordingContext.recordAll() before using other RecordingContext static methods';
   }
   for (var i = 0; i < recorders.length; i++) {
     var r = recorders[i];
@@ -176,9 +176,6 @@ RecordingContext.recorderForCanvas = function(canvas) {
  * This is useful when you have a test div and several canvases.
  */
 RecordingContext.recorderForSelector = function(div, selector) {
-  if (RecordingContext.recorders == null) {
-    throw 'You can only call recorderForSelector after RecordingContext.recordAll()';
-  }
   var canvas = div.querySelector(selector + ' canvas') || div.querySelector(selector);
   if (!canvas) {
     throw 'Unable to find a canvas matching ' + selector;
@@ -269,6 +266,7 @@ function ClickTrackingContext(ctx, px, py) {
   };
 
   // These are (most of) the canvas methods which draw something.
+  // TODO: would it make sense to purge existing hits covered by this?
   this.clearRect = function(x, y, w, h) { };
 
   this.fillRect = function(x, y, w, h) {
@@ -305,6 +303,7 @@ var exports = {
 };
 
 if (typeof(module) !== 'undefined') {
+  /* istanbul ignore next */
   module.exports = exports;
 } else {
   window.dataCanvas = exports;
