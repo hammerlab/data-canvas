@@ -134,7 +134,7 @@ Here's what the data stack looks like while the rendering happens:
 
 <!--
 Code for generating this image is here: http://jsfiddle.net/7nkbfbkb/6/
-convert -background white -alpha remove -layers OptimizePlus -delay 50 -dispose Background -loop 0 frame*.png data-canvas-stack.gif
+convert -background white -alpha remove -layers OptimizePlus -delay 75 -dispose Background -loop 0 frame*.png data-canvas-stack.gif
 -->
 <img src="data-canvas-stack.gif" width=400 height=125>
 
