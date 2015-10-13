@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/hammerlab/data-canvas.svg?branch=travis-tests)](https://travis-ci.org/hammerlab/data-canvas) [![Coverage Status](https://coveralls.io/repos/hammerlab/data-canvas/badge.svg?branch=master&service=github)](https://coveralls.io/github/hammerlab/data-canvas?branch=master)
+[![Build Status](https://travis-ci.org/hammerlab/data-canvas.svg?branch=travis-tests)](https://travis-ci.org/hammerlab/data-canvas) [![Coverage Status](https://coveralls.io/repos/hammerlab/data-canvas/badge.svg?branch=master&service=github)](https://coveralls.io/github/hammerlab/data-canvas?branch=master)[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/hammerlab/data-canvas?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 data-canvas
 ===========
 
