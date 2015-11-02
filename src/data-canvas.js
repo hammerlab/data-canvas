@@ -152,9 +152,8 @@ function transformedCalls(calls, args) {
     dy = args[6];
     dWidth = args[7];
     dHeight = args[8];
-  } else {
-    throw 'drawImage must be called with 3, 5 or 9 parameters.';
   }
+  // Other arities will make the browser throw an error on ctx.drawImage.apply
 
   var xScaling = getScaleFactor(sx, sx + sWidth, dx, dx + dWidth),
       xScale   = makeScale( sx, sx + sWidth, dx, dx + dWidth),
@@ -166,6 +165,7 @@ function transformedCalls(calls, args) {
   // arcTo
   // ellipse
 
+  // TODO: clip calls outside of the source rectangle.
   var transformCall = function(originalCall) {
     var call = originalCall.slice(),  // make a copy
         type = call[0];

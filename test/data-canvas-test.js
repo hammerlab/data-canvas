@@ -393,6 +393,24 @@ describe('data-canvas', function() {
         expect(dtx.callsOf('fillRect')).to.deep.equal([['fillRect', 50, 0, 37.5, 25]]);
       });
 
+      it('should support a source rectangle', function() {
+        var image = makeOffscreenImage();
+        var dtx = dataCanvas.getDataContext(canvas);
+        // This copies x=75-100 and y=50-100 from source to dest
+        dtx.drawImage(image, 25, 50, 75, 50, 0, 0, 75, 50);
+
+        expect(dtx.calls).to.have.length(3);
+        expect(dtx.callsOf('fillRect')).to.deep.equal([['fillRect', -25, -50, 50, 50]]);
+      });
+
+      it('should reject invalid drawImage calls', function() {
+        var image = makeOffscreenImage();
+        var dtx = dataCanvas.getDataContext(canvas);
+        expect(function() {
+          dtx.drawImage(image, 50, 0, 75);  // four params, should be 3, 5 or 9
+        }).to.throw();  // exact error depends on browser
+      });
+
       it('should transform paths', function() {
         var image = makeOffscreenImage();
         var ctx = dataCanvas.getDataContext(image);
