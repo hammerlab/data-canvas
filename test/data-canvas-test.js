@@ -50,7 +50,7 @@ describe('data-canvas', function() {
       var dtx = dataCanvas.getDataContext(canvas);
       var dtx2 = dataCanvas.getDataContext(ctx);
 
-      expect(dtx2).to.equal(dtx2);
+      expect(dtx2).to.equal(dtx);
     });
 
     it('should support read/write to properties', function() {
@@ -327,12 +327,87 @@ describe('data-canvas', function() {
           RecordingContext.recordAll();
           RecordingContext.recordAll();
         }).to.throw(/forgot.*reset/);
+        RecordingContext.reset();
       });
 
       it('should throw on access without recording', function() {
         expect(function() {
           RecordingContext.drawnObjects();
-        }).to.throw(/no canvases.*recorded/);
+        }).to.throw(/You must call .*recordAll/);
+      });
+
+      it('should throw on access with nothing recorded', function() {
+        expect(function() {
+          RecordingContext.recordAll();
+          RecordingContext.drawnObjects();
+        }).to.throw(/no canvases are being recorded/);
+        RecordingContext.reset();
+      });
+    });
+
+    describe('drawImage', function() {
+      beforeEach(function() {
+        RecordingContext.recordAll();
+      });
+
+      afterEach(function() {
+        RecordingContext.reset();
+      });
+
+      function makeOffscreenImage() {
+        var image = document.createElement('canvas');
+        image.width = 100;
+        image.height = 100;
+        var dtx = dataCanvas.getDataContext(image);
+        dtx.pushObject('A');
+        dtx.fillRect(0, 0, 50, 50);
+        dtx.popObject();
+        return image;
+      }
+
+      it('should transfer recorded calls', function() {
+        var image = makeOffscreenImage();
+        var dtx = dataCanvas.getDataContext(canvas);
+        dtx.drawImage(image, 0, 0);
+
+        expect(dtx.calls).to.have.length(3);
+        expect(dtx.drawnObjects()).to.deep.equal(['A']);
+        expect(dtx.callsOf('fillRect')).to.deep.equal([['fillRect', 0, 0, 50, 50]]);
+      });
+
+      it('should translate recorded calls', function() {
+        var image = makeOffscreenImage();
+        var dtx = dataCanvas.getDataContext(canvas);
+        dtx.drawImage(image, 50, 0);  // dx=50
+
+        expect(dtx.calls).to.have.length(3);
+        expect(dtx.callsOf('fillRect')).to.deep.equal([['fillRect', 50, 0, 50, 50]]);
+      });
+
+      it('should transform recorded calls', function() {
+        var image = makeOffscreenImage();
+        var dtx = dataCanvas.getDataContext(canvas);
+        dtx.drawImage(image, 50, 0, 75, 50);  // dx=50, dWidth=75, dHeight=50
+
+        expect(dtx.calls).to.have.length(3);
+        expect(dtx.callsOf('fillRect')).to.deep.equal([['fillRect', 50, 0, 37.5, 25]]);
+      });
+
+      it('should transform paths', function() {
+        var image = makeOffscreenImage();
+        var ctx = dataCanvas.getDataContext(image);
+        ctx.beginPath();
+        ctx.moveTo(20, 10);
+        ctx.lineTo(30, 20);
+        ctx.quadraticCurveTo(50, 20, 40, 30);
+        ctx.closePath();
+
+        var dtx = dataCanvas.getDataContext(canvas);
+        dtx.drawImage(image, 0, 10, 50, 25);  // dx=0, dy=10, dWidth=50, dHeight=25
+        expect(dtx.callsOf('moveTo')).to.deep.equal([['moveTo', 10, 12.5]]);
+        expect(dtx.callsOf('lineTo')).to.deep.equal([['lineTo', 15, 15]]);
+        expect(dtx.callsOf('quadraticCurveTo')).to.deep.equal(
+            [['quadraticCurveTo', 25, 15, 20, 17.5]]);
       });
     });
   });
