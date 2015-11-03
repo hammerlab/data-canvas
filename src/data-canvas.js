@@ -105,17 +105,140 @@ function RecordingContext(ctx) {
   this.reset = function() {
     this.calls = calls = [];
   };
+
+  var recordingDrawImage = this.drawImage;  // plain recording drawImage()
+  this.drawImage = function(image) {
+    // If the drawn image has recorded calls, then they need to be transferred over.
+    var recorder = RecordingContext.recorderForCanvas(image);
+    if (!recorder) {
+      recordingDrawImage.apply(ctx, arguments);
+    } else {
+      ctx.drawImage.apply(ctx, arguments);
+      this.calls = this.calls.concat(transformedCalls(recorder.calls, arguments));
+    }
+  }
 }
+
+// Transform the calls to a new coordinate system.
+// The arguments are those to drawImage().
+function transformedCalls(calls, args) {
+  var image = args[0],
+      sx = 0,
+      sy = 0,
+      sWidth = image.width,
+      sHeight = image.height,
+      dx,
+      dy,
+      dWidth = image.width,
+      dHeight = image.height;
+
+  if (args.length == 3) {
+    // void ctx.drawImage(image, dx, dy);
+    dx = args[1];
+    dy = args[2];
+  } else if (args.length == 5) {
+    // void ctx.drawImage(image, dx, dy, dWidth, dHeight);
+    dx = args[1];
+    dy = args[2];
+    dWidth = args[3];
+    dHeight = args[4];
+  } else if (args.length == 9) {
+    // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    sx = args[1];
+    sy = args[2];
+    sWidth = args[3];
+    sHeight = args[4];
+    dx = args[5];
+    dy = args[6];
+    dWidth = args[7];
+    dHeight = args[8];
+  }
+  // Other arities will make the browser throw an error on ctx.drawImage.apply
+
+  var xScaling = getScaleFactor(sx, sx + sWidth, dx, dx + dWidth),
+      xScale   = makeScale( sx, sx + sWidth, dx, dx + dWidth),
+      yScaling = getScaleFactor(sy, sy + sHeight, dy, dy + dHeight),
+      yScale   = makeScale( sy, sy + sHeight, dy, dy + dHeight);
+
+  // These calls are more complex:
+  // arc
+  // arcTo
+  // ellipse
+
+  // TODO: clip calls outside of the source rectangle.
+  var transformCall = function(originalCall) {
+    var call = originalCall.slice(),  // make a copy
+        type = call[0];
+    if (type in CALLS_XY) {
+      var xys = CALLS_XY[type];
+      if (typeof(xys) == 'number') xys = [xys];
+      xys.forEach(function(pos) {
+        call[1 + pos] = xScale(call[1 + pos]);
+        call[2 + pos] = yScale(call[2 + pos]);
+      });
+    }
+    if (type in CALLS_WH) {
+      var whs = CALLS_WH[type];
+      if (typeof(whs) == 'number') whs = [whs];
+      whs.forEach(function(pos) {
+        call[1 + pos] *= xScaling;
+        call[2 + pos] *= yScaling;
+      });
+    }
+    return call;
+  };
+
+  return calls.map(transformCall);
+}
+
+// Helpers for transformedCalls
+
+// Map (x1, x2) --> (y1, y2)
+function getScaleFactor(x1, x2, y1, y2) {
+  return (y2 - y1) / (x2 - x1);
+};
+function makeScale(x1, x2, y1, y2) {
+  var scale = getScaleFactor(x1, x2, y1, y2);
+  return function(x) {
+    return y1 + scale * (x - x1);
+  };
+};
+
+// These calls all have (x, y) as args at the specified positions.
+var CALLS_XY = {
+  clearRect: 0,
+  fillRect: 0,
+  strokeRect: 0,
+  fillText: 1,
+  strokeText: 1,
+  moveTo: 0,
+  lineTo: 0,
+  bezierCurveTo: [0, 2, 4],
+  quadraticCurveTo: [0, 2],
+  rect: 0
+};
+// These calls have (width, height) as args at the specified positions.
+var CALLS_WH = {
+  clearRect: 2,
+  fillRect: 2,
+  strokeRect: 2,
+  // fillText has an optional `max_width` param
+  rect: 2,
+};
 
 /**
  * Get a list of objects which have been pushed to the data canvas that match
  * the particular predicate.
+ * If no predicate is specified, all objects are returned.
  */
 RecordingContext.prototype.drawnObjectsWith = function(predicate) {
+  if (!predicate) predicate = function() { return true; };
   return this.callsOf('pushObject')
              .filter(function(x) { return predicate(x[1]) })
              .map(function(x) { return x[1]; });
 };
+// This version reads better if there's no predicate.
+RecordingContext.prototype.drawnObjects = RecordingContext.prototype.drawnObjectsWith;
 
 /**
  * Find calls of a particular type, e.g. `fillText` or `pushObject`.
@@ -190,7 +313,9 @@ RecordingContext.recorderForSelector = function(div, selector) {
 // there's only one canvas being recorded.
 function findRecorder(div, selector) {
   if (!div) {
-    if (RecordingContext.recorders.length == 0) {
+    if (!RecordingContext.recorders) {
+      throw 'You must call RecordingContext.recordAll() before using other RecordingContext static methods';
+    } else if (RecordingContext.recorders.length == 0) {
       throw 'Called a RecordingContext method, but no canvases are being recorded.';
     } else if (RecordingContext.recorders.length > 1) {
       throw 'Called a RecordingContext method while multiple canvases were being recorded. Specify one using a div and selector.';
