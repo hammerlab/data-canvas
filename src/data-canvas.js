@@ -106,14 +106,14 @@ function RecordingContext(ctx) {
     this.calls = calls = [];
   };
 
+  var recordingDrawImage = this.drawImage;  // plain recording drawImage()
   this.drawImage = function(image) {
-    ctx.drawImage.apply(ctx, arguments);
-
     // If the drawn image has recorded calls, then they need to be transferred over.
     var recorder = RecordingContext.recorderForCanvas(image);
     if (!recorder) {
-      this.calls.push(['drawImage'].concat(arguments));
+      recordingDrawImage.apply(ctx, arguments);
     } else {
+      ctx.drawImage.apply(ctx, arguments);
       this.calls = this.calls.concat(transformedCalls(recorder.calls, arguments));
     }
   }

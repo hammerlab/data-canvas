@@ -373,6 +373,9 @@ describe('data-canvas', function() {
         expect(dtx.calls).to.have.length(3);
         expect(dtx.drawnObjects()).to.deep.equal(['A']);
         expect(dtx.callsOf('fillRect')).to.deep.equal([['fillRect', 0, 0, 50, 50]]);
+        // The drawImage call is elided.
+        // This could be changed -- either way would be reasonable.
+        expect(dtx.callsOf('drawImage')).to.deep.equal([]);
       });
 
       it('should translate recorded calls', function() {
@@ -426,6 +429,20 @@ describe('data-canvas', function() {
         expect(dtx.callsOf('lineTo')).to.deep.equal([['lineTo', 15, 15]]);
         expect(dtx.callsOf('quadraticCurveTo')).to.deep.equal(
             [['quadraticCurveTo', 25, 15, 20, 17.5]]);
+      });
+
+      it('should not transfer calls from unrecorded canvases', function() {
+        var image = document.createElement('canvas');
+        image.width = 100;
+        image.height = 100;
+        image.getContext('2d').fillRect(0, 0, 100, 100);
+        var dtx = dataCanvas.getDataContext(canvas);
+        dtx.drawImage(image, 0, 0);
+
+        // The fillRect call should not be transferred over.
+        expect(dtx.callsOf('drawImage')).to.deep.equal(
+            [['drawImage', image, 0, 0]]);
+        expect(dtx.callsOf('fillRect')).to.deep.equal([]);
       });
     });
   });
