@@ -6,9 +6,7 @@ node_js:
   - "0.12"
 
 script:
-  - export PATH=$PATH:/usr/local/phantomjs-2.0.0/bin
   - which phantomjs
   - phantomjs --version
-  - /usr/local/phantomjs-2.0.0/bin/phantomjs --version
   - npm run test
   - ./generate-coverage.sh
