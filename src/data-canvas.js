@@ -114,7 +114,8 @@ function RecordingContext(ctx) {
       recordingDrawImage.apply(ctx, arguments);
     } else {
       ctx.drawImage.apply(ctx, arguments);
-      this.calls = this.calls.concat(transformedCalls(recorder.calls, arguments));
+      calls = calls.concat(transformedCalls(recorder.calls, arguments));
+      this.calls = calls;
     }
   }
 }
