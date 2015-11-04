@@ -444,6 +444,23 @@ describe('data-canvas', function() {
             [['drawImage', image, 0, 0]]);
         expect(dtx.callsOf('fillRect')).to.deep.equal([]);
       });
+
+      // Regression test for #13
+      it('should record calls after drawImage', function() {
+        var image = makeOffscreenImage();
+        var dtx = dataCanvas.getDataContext(canvas);
+        dtx.clearRect(0, 0, 200, 50);
+        dtx.drawImage(image, 0, 0);
+        dtx.fillRect(20, 10, 100, 40);
+
+        expect(dtx.calls).to.have.length(5);
+        expect(dtx.drawnObjects()).to.deep.equal(['A']);
+        expect(dtx.callsOf('clearRect')).to.deep.equal([['clearRect', 0, 0, 200, 50]]);
+        expect(dtx.callsOf('fillRect')).to.deep.equal([
+            ['fillRect', 0, 0, 50, 50],
+            ['fillRect', 20, 10, 100, 40]
+        ]);
+      });
     });
   });
 });
