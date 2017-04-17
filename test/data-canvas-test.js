@@ -157,7 +157,8 @@ describe('data-canvas', function() {
     // PhantomJS 1.9.x does not support isStrokeInPath
     // When Travis-CI updates to Phantom2, this can be re-enabled.
     // See https://github.com/ariya/phantomjs/issues/12948
-    if (!navigator.userAgent.match(/PhantomJS\/1.9/)) {
+    console.log(navigator.userAgent);
+    // if (!navigator.userAgent.match(/PhantomJS\/1.9/)) {
       it('should detect clicks in strokes', function() {
         function draw(dtx) {
           dtx.save();
@@ -180,7 +181,7 @@ describe('data-canvas', function() {
         // ... while a click in the interior is not.
         expect(getObjectsAt(draw, 150, 20)).to.deep.equal([]);
       });
-    }
+    // }
 
   });
 
